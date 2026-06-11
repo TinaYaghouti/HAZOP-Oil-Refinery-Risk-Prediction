@@ -1,0 +1,45 @@
+{
+  "refinery_units": {
+    "tehran": {
+      "name": "Tehran Refinery",
+      "enabled": true,
+      "risk_categories": {
+        "operational": {
+          "subcategories": ["process_deviation", "equipment_failure"],
+          "features": ["temperature", "pressure", "flow_rate", "level", "vibration"],
+          "data_source": { "type": "csv", "path": "Data/operational_tehran.csv" },
+          "hazop_rules": {
+            "high_risk": ["temp>100 & pressure>15", "vibration>8 & temp>90"],
+            "medium_risk": ["temp>80", "pressure>12", "vibration>8"]
+          }
+        },
+        "strategic": {
+          "subcategories": ["sanctions", "price_volatility"],
+          "features": ["exchange_rate", "oil_price", "sanctions_index"],
+          "data_source": { "type": "csv", "path": "Data/OtherRisks/strategic_risk.csv" }
+        },
+        "financial": {
+          "subcategories": ["currency_risk", "commodity_risk"],
+          "features": ["usd_irr", "inflation_rate", "interest_rate"],
+          "data_source": { "type": "csv", "path": "Data/OtherRisks/financial_risk.csv" }
+        },
+        "legal": {
+          "subcategories": ["compliance", "contract_risk"],
+          "features": ["audit_score", "contract_deviations", "compliance_violations"],
+          "data_source": { "type": "csv", "path": "Data/OtherRisks/legal_risk.csv" }
+        }
+      }
+    },
+    "bandar": {
+      "name": "Persian Gulf Refinery",
+      "enabled": false,
+      "risk_categories": {
+        "operational": {
+          "subcategories": ["process_deviation"],
+          "features": ["temperature", "pressure"],
+          "data_source": { "type": "csv", "path": "Data/operational_bandar.csv" }
+        }
+      }
+    }
+  }
+}
