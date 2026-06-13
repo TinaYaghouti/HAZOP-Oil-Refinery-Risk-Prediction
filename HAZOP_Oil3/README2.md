@@ -22,7 +22,7 @@
 ### How to Add a New Risk Category
 1. Add new category under any unit in `risk_config.json`
 2. Define features and data source
-3. Train new model using `train_other_risks_models.py` (template available)
+3. Train new model using `TrainOtherRisksModels.py` (template available)
 
 ### Files Included
 - All code, data, models, plots, and documentation
