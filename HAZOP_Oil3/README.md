@@ -103,7 +103,9 @@ This project predicts risk levels (Low/Medium/High) for different refinery units
 # Model Performance
 
 Operational XGBoost: ~93% accuracy
+
 Strategic / Financial / Legal XGBoost: ~88-92% accuracy
+
 LSTM: ~87% accuracy
 
 # Contact
