@@ -1,7 +1,7 @@
 # HAZOP-Oil-Refinery-Risk-Prediction
 Scalable ML/DL system for oil refinery risk prediction, Supports operational, strategic, financial &amp; legal risks with XGBoost, LSTM, Isolation Forest. Config driven architecture ( no code changes for new units )
 
-## Final Summary – Phase 1 & 2
+## Final Summary ☘️ Phase 1 & 2
 
 ### Phase 1 (Completed)
 - Time series risk prediction for operational parameters (temperature, pressure, flow, vibration)
