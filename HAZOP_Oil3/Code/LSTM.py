@@ -4,22 +4,31 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
 from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.utils.class_weight import compute_class_weight
 
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import os
 
 os.environ['TF_ENABLE_ONDCNN_OPTS'] = '0'
 
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+df = pd.read_csv(os.path.join(base_dir, 'Data', 'HAZOP_DATA.csv'))
+
 # Load data
 
-df = pd.read_csv('Data/HAZOP_DATA.csv')
+# df = pd.read_csv('Data/HAZOP_DATA.csv')
 features = ['temperature', 'pressure', 'flow_rate', 'level', 'vibration']
 X = df[features].values
 y = df['risk'].values
+
+# Check class balance first 
+
+print("Class distribution:")
+print(pd.Series(y).value_counts(normalize=True))
 
 # Normalize
 
@@ -38,13 +47,39 @@ def CreateSequances(data, labels, seq_length=10):
 SEQ = 10
 X_seq, y_seq = CreateSequances(X_scaled, y, SEQ)
 
-# Train & test split
+# Time-based split ( NOT random ), sequences overlap, so random split leaks data
 
-X_train, X_test, y_train, y_test = train_test_split(X_seq, y_seq, test_size=0.2, random_state=42)
+split_idx = int(len(X_seq) * 0.8)
+X_train, X_test = X_seq[:split_idx], X_seq[split_idx:]
+y_train, y_test = y_seq[:split_idx], y_seq[split_idx:]
 
-print(f"LSTM DATA SHAPE")
-print(f"X_train: {X_train.shape}")
-print(f"X_test: {X_test.shape}")
+val_split_idx = int(len(X_train) * 0.8)
+X_train, X_val = X_train[:val_split_idx], X_train[val_split_idx:]
+y_train, y_val = y_train[:val_split_idx], y_train[val_split_idx:]
+
+from imblearn.over_sampling import SMOTE
+
+n_samples, n_steps, n_features = X_train.shape
+X_train_2d = X_train.reshape(n_samples, n_steps * n_features)
+
+y_train = y_train.ravel()
+
+smote = SMOTE(random_state=42)
+X_train_bal, y_train_bal = smote.fit_resample(X_train_2d, y_train)
+
+X_train_bal = X_train_bal.reshape(-1, n_steps, n_features)
+
+# print("After SMOTE:")
+# print(pd.Series(y_balanced).value_counts())
+
+print(f"\nLSTM DATA SHAPE")
+print(f"X_train: {X_train.shape}, X_val: {X_val.shape}, X_test: {X_test.shape}")
+
+# Compute class weights to fix imbalance
+
+class_weights = compute_class_weight("balanced", classes=np.unique(y_train), y=y_train)
+class_weight_dict = dict(enumerate(class_weights))
+print(f"\nClass weights: {class_weight_dict}")
 
 # Build LSTM model
 
@@ -62,8 +97,29 @@ model.summary()
 # Train
 
 early_stop = EarlyStopping(patience=5, restore_best_weights=True)
-model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2, callbacks=[early_stop], verbose=1)
+history = model.fit(
+    X_train, y_train,
+    validation_data=(X_val, y_val),
+    epochs=50,
+    batch_size=32,
+    class_weight=class_weight_dict,
+    callbacks=[early_stop],
+    verbose=1
+)
 
 loss, acc = model.evaluate(X_test, y_test)
-print(f" LSTM Test Accuracy: {acc:.4f}")
+print(f"\nLSTM Test Accuracy: {acc:.4f}")
 model.save('lstm.model.keras')
+
+# Plot training history
+
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Train')
+plt.plot(history.history['val_accuracy'], label='Validation')
+plt.title('Model Accuracy')
+plt.xlabel('Epoch'); plt.ylabel('accuracy'); plt.legend()
+
+plt.tight_layout()
+plt.savefig('HAZOP_OIL3/plots/lstm_training.png')
+plt.show()
