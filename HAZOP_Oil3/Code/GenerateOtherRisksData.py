@@ -4,7 +4,7 @@ import os
 
 os.makedirs("Data/OTHER_RISKS", exist_ok=True)
 
-# Stragetic Risks
+# Strategic Risks
 
 n = 5000
 strategic_data = {
